@@ -1,5 +1,3 @@
-Вот переработанный скрипт, который устанавливает Debian 12 и поверх него Home Assistant:
-
 ```bash
 #!/usr/bin/env bash
 
