@@ -439,7 +439,7 @@ msg_info "Setting up cloud-init"
 qm set $VMID --ide2 $STORAGE:cloudinit
 qm set $VMID --ciuser root
 qm set $VMID --cipassword password
-qm set $VMID --sshkeys /etc/pve/pub_keys/*
+#qm set $VMID --sshkeys /etc/pve/pub_keys/*
 qm set $VMID --ipconfig0 ip=dhcp
 
 msg_info "Installing Home Assistant"
