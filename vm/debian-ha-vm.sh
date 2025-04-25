@@ -378,34 +378,45 @@ else
 fi
 msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
 msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
+msg_info "Retrieving the URL for the Debian 12 Qcow2 Disk Image"
 
 msg_info "Downloading Debian 12 Cloud Image"
 DEBIAN_URL="https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+sleep 2
+msg_ok "${CL}${BL}${URL}${CL}"
 wget -q --show-progress $DEBIAN_URL
-msg_ok "Downloaded Debian 12 Cloud Image"
-
-msg_info "Creating VM"
-qm create $VMID -name $HN -memory $RAM_SIZE -cores $CORE_COUNT -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU \
-  -ostype l26 -cpu host -onboot 1 -agent 1 -machine $MACH -bios ovmf -efidisk0 $STORAGE:0${FORMAT} \
-  -scsihw virtio-scsi-pci -tags proxmox-helper-scripts
+FILE=$(basename $DEBIAN_URL)
+msg_ok "Downloaded ${CL}${BL}${FILE}${CL}"
 
 STORAGE_TYPE=$(pvesm status -storage $STORAGE | awk 'NR>1 {print $2}')
 case $STORAGE_TYPE in
 nfs | dir)
-  DISK_EXT=".raw"
-  DISK_IMPORT="-format raw"
+  DISK_EXT=".qcow2"
+  DISK_REF="$VMID/"
+  DISK_IMPORT="-format qcow2"
+  THIN=""
   ;;
-btrfs | local-zfs)
+btrfs)
   DISK_EXT=".raw"
+  DISK_REF="$VMID/"
   DISK_IMPORT="-format raw"
+  FORMAT=",efitype=4m"
+  THIN=""
   ;;
 esac
+for i in {0,1}; do
+  disk="DISK$i"
+  eval DISK${i}=vm-${VMID}-disk-${i}${DISK_EXT:-}
+  eval DISK${i}_REF=${STORAGE}:${DISK_REF:-}${!disk}
+done
 
-DISK1="vm-${VMID}-disk-0${DISK_EXT:-}"
-DISK1_REF="$STORAGE:0/$DISK1"
+msg_info "Creating VM a Debian 12 VM"
+qm create $VMID -name $HN -memory $RAM_SIZE -cores $CORE_COUNT -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU \
+  -ostype l26 -cpu host -onboot 1 -agent 1 -machine $MACH -bios ovmf -efidisk0 $STORAGE:0${FORMAT} \
+  -scsihw virtio-scsi-pci -tags proxmox-helper-scripts
 
 msg_info "Importing Disk"
-qm importdisk $VMID debian-12-genericcloud-amd64.qcow2 $STORAGE $DISK_IMPORT >/dev/null
+qm importdisk $VMID debian-12-genericcloud-amd64.qcow2 ${DISK_IMPORT:-} 1>&/dev/null
 msg_ok "Imported Disk"
 
 msg_info "Configuring VM"
