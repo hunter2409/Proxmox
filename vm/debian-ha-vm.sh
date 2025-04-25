@@ -1,4 +1,3 @@
-```bash
 #!/usr/bin/env bash
 
 # Copyright (c) 2025 hunter2409
@@ -481,4 +480,4 @@ if [ "$START_VM" == "yes" ]; then
 fi
 
 msg_ok "Completed Successfully!\n"
-```
+
