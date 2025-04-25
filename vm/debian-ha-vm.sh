@@ -415,10 +415,6 @@ qm create $VMID -agent 1${MACHINE} -tablet 0 -localtime 1 -bios ovmf${CPU_TYPE} 
   -name $HN -tags proxmox-helper-scripts -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU -onboot 1 -ostype l26 -scsihw virtio-scsi-pci
 pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
 
-# qm create $VMID -name $HN -memory $RAM_SIZE -cores $CORE_COUNT -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU \
-#  -ostype l26 -cpu host -onboot 1 -agent 1 -machine $MACH -bios ovmf -efidisk0 $STORAGE:0${FORMAT} \
-#  -scsihw virtio-scsi-pci -tags proxmox-helper-scripts
-
 msg_info "Importing Disk"
 #qm importdisk $VMID debian-12-genericcloud-amd64.qcow2 ${DISK_IMPORT:-} 1>&/dev/null
 qm importdisk $VMID ${FILE} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
