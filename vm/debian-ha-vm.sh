@@ -411,19 +411,30 @@ for i in {0,1}; do
 done
 
 msg_info "Creating VM a Debian 12 VM"
-qm create $VMID -name $HN -memory $RAM_SIZE -cores $CORE_COUNT -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU \
-  -ostype l26 -cpu host -onboot 1 -agent 1 -machine $MACH -bios ovmf -efidisk0 $STORAGE:0${FORMAT} \
-  -scsihw virtio-scsi-pci -tags proxmox-helper-scripts
+qm create $VMID -agent 1${MACHINE} -tablet 0 -localtime 1 -bios ovmf${CPU_TYPE} -cores $CORE_COUNT -memory $RAM_SIZE \
+  -name $HN -tags proxmox-helper-scripts -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU -onboot 1 -ostype l26 -scsihw virtio-scsi-pci
+pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
+
+# qm create $VMID -name $HN -memory $RAM_SIZE -cores $CORE_COUNT -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU \
+#  -ostype l26 -cpu host -onboot 1 -agent 1 -machine $MACH -bios ovmf -efidisk0 $STORAGE:0${FORMAT} \
+#  -scsihw virtio-scsi-pci -tags proxmox-helper-scripts
 
 msg_info "Importing Disk"
-qm importdisk $VMID debian-12-genericcloud-amd64.qcow2 ${DISK_IMPORT:-} 1>&/dev/null
+#qm importdisk $VMID debian-12-genericcloud-amd64.qcow2 ${DISK_IMPORT:-} 1>&/dev/null
+qm importdisk $VMID ${FILE} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
 msg_ok "Imported Disk"
 
 msg_info "Configuring VM"
+#qm set $VMID \
+#  -scsi0 ${DISK1_REF},${DISK_CACHE}size=32G \
+#  -boot order=scsi0 \
+#  -description "<div align='center'><a href='https://Helper-Scripts.com' target='_blank' rel='noopener noreferrer'><img src='https://raw.githubusercontent.com/tteck/Proxmox/main/misc/images/logo-81x112.png'/></a>
 qm set $VMID \
-  -scsi0 ${DISK1_REF},${DISK_CACHE}size=32G \
+  -efidisk0 ${DISK0_REF}${FORMAT} \
+  -scsi0 ${DISK1_REF},${DISK_CACHE}${THIN}size=2G \
   -boot order=scsi0 \
-  -description "<div align='center'><a href='https://Helper-Scripts.com' target='_blank' rel='noopener noreferrer'><img src='https://raw.githubusercontent.com/tteck/Proxmox/main/misc/images/logo-81x112.png'/></a>
+  -serial0 socket \
+  -description "<div align='center'><a href='https://Helper-Scripts.com'><img src='https://raw.githubusercontent.com/tteck/Proxmox/main/misc/images/logo-81x112.png'/></a>
 
   # Debian 12 with Home Assistant
 
