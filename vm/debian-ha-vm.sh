@@ -27,18 +27,14 @@ GN=$(echo "\033[1;92m")
 DGN=$(echo "\033[32m")
 CL=$(echo "\033[m")
 BFR="\\r\\033[K"
-HOLD=" "
+HOLD="-"
 CM="${GN}✓${CL}"
 CROSS="${RD}✗${CL}"
 THIN="discard=on,ssd=1,"
-SPINNER_PID=""
-set -Eeuo pipefail
+set -e
 trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
 trap cleanup EXIT
-
 function error_handler() {
-  if [ -n "$SPINNER_PID" ] && ps -p $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
-  printf "\e[?25h"
   local exit_code="$?"
   local line_number="$1"
   local command="$2"
@@ -79,21 +75,15 @@ function spinner() {
 
 function msg_info() {
   local msg="$1"
-  echo -ne " ${HOLD} ${YW}${msg}   "
-  spinner &
-  SPINNER_PID=$!
+  echo -ne " ${HOLD} ${YW}${msg}..."
 }
 
 function msg_ok() {
-  if [ -n "$SPINNER_PID" ] && ps -p $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
-  printf "\e[?25h"
   local msg="$1"
   echo -e "${BFR} ${CM} ${GN}${msg}${CL}"
 }
 
 function msg_error() {
-  if [ -n "$SPINNER_PID" ] && ps -p $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
-  printf "\e[?25h"
   local msg="$1"
   echo -e "${BFR} ${CROSS} ${RD}${msg}${CL}"
 }
@@ -150,9 +140,9 @@ function default_settings() {
   VMID="$NEXTID"
   FORMAT=",efitype=4m"
   MACHINE=""
-  DISK_CACHE="cache=writethrough,"
+  DISK_CACHE=""
   HN="debian-ha"
-  CPU_TYPE=" -cpu host"
+  CPU_TYPE=""
   CORE_COUNT="2"
   RAM_SIZE="4096"
   BRG="vmbr0"
